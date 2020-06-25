@@ -1,0 +1,49 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion "30.0.0"
+    defaultConfig {
+        applicationId 'com.raspberry'
+        minSdkVersion 21
+        targetSdkVersion 29
+        versionCode 20200713
+        versionName "0.1.1"
+    }
+    buildTypes {
+        release {
+            buildConfigField "boolean", "LOG_DEBUG", "false"
+            minifyEnabled true
+            zipAlignEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            shrinkResources true
+            multiDexEnabled true
+        }
+    }
+    packagingOptions {
+        exclude 'META-INF/*'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+}
+
+dependencies {
+    implementation project(':player-java')
+
+    implementation "androidx.annotation:annotation:1.1.0"
+    implementation "androidx.legacy:legacy-support-v4:1.0.0"
+    implementation "androidx.appcompat:appcompat:1.1.0"
+
+    implementation 'org.fourthline.cling:cling-core:2.1.1'
+    implementation 'org.fourthline.cling:cling-support:2.1.1'
+
+    implementation 'org.eclipse.jetty:jetty-servlet:8.1.12.v20130726'
+    implementation 'org.eclipse.jetty:jetty-client:8.1.12.v20130726'
+    implementation 'org.eclipse.jetty:jetty-server:8.1.12.v20130726'
+
+
+    testImplementation 'junit:junit:4.13'
+}
