@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Raspberry</string>
 
-
+    <string name="app_exit">再按一次退出程序</string>
+    <string name="player_exit">再按一次退出关闭</string>
 
 </resources>

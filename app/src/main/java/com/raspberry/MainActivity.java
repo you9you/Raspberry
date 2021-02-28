@@ -39,18 +39,16 @@ import org.fourthline.cling.support.lastchange.LastChangeAwareServiceManager;
 import org.fourthline.cling.support.lastchange.LastChangeParser;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 
 
 public class MainActivity extends AppCompatActivity {
     private AndroidUpnpService upnpService;
 
-    private final String tag = "MainActivity";
-    public static Context context;
-    private TextView textView;
+    private final String TAG = "MainActivity";
+    private VideoService videoService;
 
-    private String device = Build.MODEL;
-    private String brand = Build.BRAND;
+    private final String device = Build.MODEL;
+    private final String brand = Build.BRAND;
 
 
     private LocalService<AVTransportService> service;
@@ -59,50 +57,72 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        textView = findViewById(R.id.friendlyName);
-        init();
-    }
+        TextView textView = findViewById(R.id.friendlyName);
+        bindService();
 
-    private void init() {
-        context = this;
-        // bind upnp service
-        this.bindService(
-                new Intent(this, UpnpService.class),
-                serviceConnection,
-                Context.BIND_AUTO_CREATE
-        );
         textView.setText(device + " - " + getString(R.string.app_name));
-
-        Log.i("init", "device: " + device);
-        Log.i("init", "brand: " + brand);
-
-        //debug();
+        Log.i(TAG, "device: " + device);
+        Log.i(TAG, "brand: " + brand);
     }
 
-    private void debug() {
-        try {
-            newMedia(new URI("http://192.168.31.10/Video/3%E5%B9%B4A%E7%B5%84%E2%80%95%E4%BB%8A%E3%81%8B%E3%82%89%E7%9A%86%E3%81%95%E3%82%93%E3%81%AF%E3%80%81%E4%BA%BA%E8%B3%AA%E3%81%A7%E3%81%99/1%5BCA0E76E6%5D.mp4"));
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-    }
+    private void bindService() {
+        // bind video service
+        Log.d(TAG, "bindService(VideoService): " + getApplicationContext().bindService(new Intent(this, VideoService.class), new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                videoService = ((VideoService.VideoBinder) service).getService();
 
-    public static void newMedia(URI uri) {
-        Log.d("newMedia", uri.toString());
+                //注册回调接口
+                videoService.bindEvent(new VideoServiceEvent() {
+                    @Override
+                    public void onDestroy() {
 
-        Intent intent = new Intent(context, PlayerActivity.class);
-        intent.putExtra("uri", uri);
-        context.startActivity(intent);
-    }
+                    }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        try {
-            getApplicationContext().unbindService(serviceConnection);
-        } catch (IllegalArgumentException err) {
-            Log.w(tag, err);
-        }
+                    @Override
+                    public void onNewMedia(URI uri, String metaData) {
+                        Log.d(TAG, "onNewMedia(Event): " + uri.toString() + ", metaData: " + metaData);
+
+                        VideoService.destroyAll();
+
+                        Intent intent = new Intent(MainActivity.this, PlayerActivity.class);
+                        intent.putExtra("uri", uri);
+                        MainActivity.this.startActivity(intent);
+                    }
+                });
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+
+            }
+
+        }, BIND_AUTO_CREATE));
+
+        // bind upnp service
+        Log.d(TAG, "bindService(UpnpService): " + getApplicationContext().bindService(new Intent(this, UpnpService.class), new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                upnpService = (AndroidUpnpService) service;
+
+                // Register the device when this activity binds to the service for the first time
+                try {
+                    upnpService.getRegistry().addDevice(createDevice());
+
+
+                    Log.i(TAG, "Starting UPnP Server");
+                } catch (Exception err) {
+                    Log.e(TAG, "Exception: " + err);
+                    err.printStackTrace(System.err);
+                    System.exit(1);
+                }
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                upnpService = null;
+            }
+        }, BIND_AUTO_CREATE));
     }
 
     private long exitTime = 0;
@@ -112,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if ((System.currentTimeMillis() - exitTime) > 2000) {
-                Toast.makeText(getApplicationContext(), "再按一次退出程序",
+                Toast.makeText(getApplicationContext(), R.string.app_exit,
                         Toast.LENGTH_SHORT).show();
                 exitTime = System.currentTimeMillis();
             } else {
@@ -122,28 +142,6 @@ public class MainActivity extends AppCompatActivity {
         }
         return super.onKeyDown(keyCode, event);
     }
-
-    private ServiceConnection serviceConnection = new ServiceConnection() {
-
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            upnpService = (AndroidUpnpService) service;
-
-            // Register the device when this activity binds to the service for the first time
-            try {
-                upnpService.getRegistry().addDevice(createDevice());
-
-                Log.i(tag, "Starting UPnP Server");
-            } catch (Exception err) {
-                Log.e(tag, "Exception: " + err);
-                err.printStackTrace(System.err);
-                System.exit(1);
-            }
-        }
-
-        public void onServiceDisconnected(ComponentName className) {
-            upnpService = null;
-        }
-    };
 
     public LocalDevice createDevice() throws ValidationException, LocalServiceBindingException {
         // 设备标识

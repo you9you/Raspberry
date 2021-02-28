@@ -1,8 +1,11 @@
 package com.raspberry;
 
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -23,9 +26,11 @@ import com.raspberry.player.player.VideoPlayer;
 import java.io.IOException;
 import java.net.URI;
 
+import org.fourthline.cling.support.lastchange.LastChangeAwareServiceManager;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 
 public class PlayerActivity extends AppCompatActivity implements VideoListener {
+    private final String TAG = "PlayerActivity";
     public static final int MSG_REFRESH = 1001;
     private TextView tvTime;
     private SeekBar seekBar;
@@ -64,7 +69,7 @@ public class PlayerActivity extends AppCompatActivity implements VideoListener {
                             handler.sendEmptyMessageDelayed(MSG_REFRESH, 500);
                         }
 
-                        //LastChangeAwareServiceManager manager = (LastChangeAwareServiceManager)service.getManager();
+                        //LastChangeAwareServiceManager manager = (LastChangeAwareServiceManager) service.getManager();
                         //manager.fireLastChange();
 
                         break;
@@ -72,18 +77,50 @@ public class PlayerActivity extends AppCompatActivity implements VideoListener {
             }
         };
 
+        Log.d(TAG, "bindService: " + getApplicationContext().bindService(new Intent(this, VideoService.class), new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                VideoService videoService = ((VideoService.VideoBinder) service).getService();
+
+                //注册回调接口
+                videoService.bindOnDestroy(new VideoServiceEvent() {
+                    @Override
+                    public void onDestroy() {
+                        exit();
+                    }
+
+                    @Override
+                    public void onNewMedia(URI uri, String metaData) {
+                    }
+                });
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+
+            }
+
+        }, BIND_AUTO_CREATE));
+
 
         Intent intent = getIntent();
         URI uri = (URI) intent.getSerializableExtra("uri");
-        Log.i("getURI", uri.toString());
+        Log.i(TAG, "getURI: " + uri.toString());
 
         fadeIn(Loading);
         videoPlayer.setPath(uri.toString());
         try {
             videoPlayer.load();
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "videoPlayer.load: ", e);
         }
+    }
+
+    private void exit(){
+        videoPlayer.stop();
+        videoPlayer.release();
+        handler.removeCallbacksAndMessages(null);
+        finish();
     }
 
     private long exitTime = 0;
@@ -162,14 +199,11 @@ public class PlayerActivity extends AppCompatActivity implements VideoListener {
         }
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if ((System.currentTimeMillis() - exitTime) > 2000) {
-                Toast.makeText(getApplicationContext(), "再按一次退出关闭",
+                Toast.makeText(getApplicationContext(), R.string.player_exit,
                         Toast.LENGTH_SHORT).show();
                 exitTime = System.currentTimeMillis();
             } else {
-                videoPlayer.stop();
-                videoPlayer.release();
-                handler.removeCallbacksAndMessages(null);
-                finish();
+                exit();
             }
             return true;
         }
@@ -183,7 +217,7 @@ public class PlayerActivity extends AppCompatActivity implements VideoListener {
     }
 
     private void refresh(long current, long duration) {
-        Log.d("refresh", current + " " + duration);
+        Log.d(TAG, "refresh: " + current + " " + duration);
         long current_second = current % 60;
         long current_minute = current / 60;
         long total_second = duration % 60;
@@ -212,9 +246,9 @@ public class PlayerActivity extends AppCompatActivity implements VideoListener {
             time = videoPlayer.getCurrentPosition() + DEV * 1000L;
             if (time < 0) time = 0;
 
-            Log.d("seek", "old time: " + videoPlayer.getCurrentPosition());
-            Log.d("seek", "new value: " + DEV * 1000L);
-            Log.d("seek", "new time: " + time);
+            Log.d(TAG, "seek old-time: " + videoPlayer.getCurrentPosition());
+            Log.d(TAG, "seek new-value: " + DEV * 1000L);
+            Log.d(TAG, "seek new-time: " + time);
 
             INC = 0;
             DEC = 0;

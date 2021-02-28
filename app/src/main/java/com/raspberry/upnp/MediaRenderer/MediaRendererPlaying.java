@@ -1,10 +1,7 @@
 package com.raspberry.upnp.MediaRenderer;
 
-import android.content.Intent;
+import com.raspberry.VideoService;
 
-import com.raspberry.MainActivity;
-
-import org.fourthline.cling.support.avtransport.impl.state.AbstractState;
 import org.fourthline.cling.support.avtransport.impl.state.Playing;
 import org.fourthline.cling.support.avtransport.lastchange.AVTransportVariable;
 import org.fourthline.cling.support.model.AVTransport;
@@ -26,7 +23,7 @@ public class MediaRendererPlaying extends Playing {
     }
 
     @Override
-    public Class<? extends AbstractState> setTransportURI(URI uri, String metaData) {
+    public Class<?> setTransportURI(URI uri, String metaData) {
         getTransport().setMediaInfo(new MediaInfo(uri.toString(), metaData));
 
         // if you can, you should find and set the duration of the track here!
@@ -39,40 +36,42 @@ public class MediaRendererPlaying extends Playing {
                 new AVTransportVariable.CurrentTrackURI(uri)
         );
 
-        MainActivity.newMedia(uri);
+        VideoService.getEvent().onNewMedia(uri, metaData);
+        //MainActivity.newMedia(uri);
+
         return MediaRendererStopped.class;
     }
 
     @Override
-    public Class<? extends AbstractState> stop() {
+    public Class<?> stop() {
         // Stop playing!
-        //MainActivity.videoPlayer.stop();
+        VideoService.destroyAll();
         return MediaRendererStopped.class;
     }
 
     @Override
-    public Class<? extends AbstractState> play(String s) {
+    public Class<?> play(String s) {
         return MediaRendererPlaying.class;
     }
 
     @Override
-    public Class<? extends AbstractState> pause() {
+    public Class<?> pause() {
         System.out.println("pause");
         return MediaRendererPausedPlay.class;
     }
 
     @Override
-    public Class<? extends AbstractState> next() {
+    public Class<?> next() {
         return null;
     }
 
     @Override
-    public Class<? extends AbstractState> previous() {
+    public Class<?> previous() {
         return null;
     }
 
     @Override
-    public Class<? extends AbstractState> seek(SeekMode seekMode, String s) {
+    public Class<?> seek(SeekMode seekMode, String s) {
         System.out.println("seek:" + seekMode.ordinal() + "------" + s);
 
         return MediaRendererPausedPlay.class;

@@ -1,11 +1,7 @@
 package com.raspberry.upnp.MediaRenderer;
 
-import android.content.Intent;
-import android.util.Log;
+import com.raspberry.VideoService;
 
-import com.raspberry.MainActivity;
-
-import org.fourthline.cling.support.avtransport.impl.state.AbstractState;
 import org.fourthline.cling.support.avtransport.impl.state.PausedPlay;
 import org.fourthline.cling.support.avtransport.lastchange.AVTransportVariable;
 import org.fourthline.cling.support.model.AVTransport;
@@ -20,7 +16,7 @@ public class MediaRendererPausedPlay extends PausedPlay {
     }
 
     @Override
-    public Class<? extends AbstractState> setTransportURI(URI uri, String metaData) {
+    public Class<?> setTransportURI(URI uri, String metaData) {
         getTransport().setMediaInfo(new MediaInfo(uri.toString(), metaData));
 
         // if you can, you should find and set the duration of the track here!
@@ -33,20 +29,21 @@ public class MediaRendererPausedPlay extends PausedPlay {
                 new AVTransportVariable.CurrentTrackURI(uri)
         );
 
-        MainActivity.newMedia(uri);
+        VideoService.getEvent().onNewMedia(uri, metaData);
+        //MainActivity.newMedia(uri);
 
         return MediaRendererStopped.class;
     }
 
     @Override
-    public Class<? extends AbstractState> stop() {
+    public Class<?> stop() {
         /// Same here, if you are stopped already and someone calls STOP, well...
-//        MainActivity.videoPlayer.stop();
+        VideoService.destroyAll();
         return MediaRendererStopped.class;
     }
 
     @Override
-    public Class<? extends AbstractState> play(String s) {
+    public Class<?> play(String s) {
         System.out.println("play");
         return MediaRendererPlaying.class;
     }

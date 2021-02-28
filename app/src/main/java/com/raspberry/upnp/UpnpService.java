@@ -1,5 +1,6 @@
 package com.raspberry.upnp;
 
+import android.util.Log;
 import org.fourthline.cling.android.AndroidUpnpServiceConfiguration;
 import org.fourthline.cling.android.AndroidUpnpServiceImpl;
 
@@ -37,7 +38,7 @@ public class UpnpService extends AndroidUpnpServiceImpl {
 
     @Override
     public void onDestroy() {
+        Log.d("UpnpService", "onDestroy");
         super.onDestroy();
-        System.out.println("UpnpService onDestroy!!!!");
     }
 }

@@ -28,6 +28,7 @@
         android:screenOrientation="landscape"
         android:theme="@style/AppTheme">
 
+        <service android:name="com.raspberry.VideoService" />
         <service android:name="com.raspberry.upnp.UpnpService" />
 
         <activity
@@ -40,7 +41,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="PlayerActivity"
+            android:name=".PlayerActivity"
             android:configChanges="orientation|screenSize"
             android:hardwareAccelerated="true" />
     </application>
