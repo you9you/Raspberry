@@ -7,8 +7,8 @@ android {
         applicationId 'com.raspberry'
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 20200713
-        versionName "0.1.1"
+        versionCode 20210308
+        versionName "0.1.2"
     }
     buildTypes {
         release {
