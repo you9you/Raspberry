@@ -16,7 +16,7 @@ public class VideoService extends Service {
     private final String TAG = "VideoService";
 
     // onDestroy
-    private static List<VideoServiceEvent> eventList = new ArrayList<>();
+    private static final List<VideoServiceEvent> eventList = new ArrayList<>();
 
     private static VideoServiceEvent event = new VideoServiceEvent() {
         // default

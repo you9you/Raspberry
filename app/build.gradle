@@ -1,14 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
     buildToolsVersion "30.0.3"
     defaultConfig {
         applicationId 'com.raspberry'
         minSdkVersion 21
-        targetSdkVersion 30
-        versionCode 20210308
-        versionName "0.1.2"
+        targetSdkVersion 31
+        versionCode 20220106
+        versionName "0.1.3"
     }
     buildTypes {
         release {

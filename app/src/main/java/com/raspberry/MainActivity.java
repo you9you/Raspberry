@@ -4,12 +4,10 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.os.Build;
-import android.os.Bundle;
+import android.os.*;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.os.IBinder;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.TextView;
@@ -23,7 +21,10 @@ import com.raspberry.upnp.UpnpService;
 import org.fourthline.cling.android.AndroidUpnpService;
 import org.fourthline.cling.binding.LocalServiceBindingException;
 import org.fourthline.cling.binding.annotations.AnnotationLocalServiceBinder;
+import org.fourthline.cling.controlpoint.ActionCallback;
 import org.fourthline.cling.model.ValidationException;
+import org.fourthline.cling.model.action.ActionInvocation;
+import org.fourthline.cling.model.message.UpnpResponse;
 import org.fourthline.cling.model.meta.DeviceDetails;
 import org.fourthline.cling.model.meta.DeviceIdentity;
 import org.fourthline.cling.model.meta.LocalDevice;
@@ -33,6 +34,8 @@ import org.fourthline.cling.model.meta.ModelDetails;
 import org.fourthline.cling.model.types.DeviceType;
 import org.fourthline.cling.model.types.UDADeviceType;
 import org.fourthline.cling.model.types.UDN;
+import org.fourthline.cling.support.avtransport.callback.Play;
+import org.fourthline.cling.support.avtransport.callback.SetAVTransportURI;
 import org.fourthline.cling.support.avtransport.impl.AVTransportService;
 import org.fourthline.cling.support.avtransport.lastchange.AVTransportLastChangeParser;
 import org.fourthline.cling.support.lastchange.LastChangeAwareServiceManager;
@@ -63,6 +66,19 @@ public class MainActivity extends AppCompatActivity {
         textView.setText(device + " - " + getString(R.string.app_name));
         Log.i(TAG, "device: " + device);
         Log.i(TAG, "brand: " + brand);
+
+        final Handler handler = new Handler(Looper.getMainLooper());
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                //要做的事情
+                LastChangeAwareServiceManager manager = (LastChangeAwareServiceManager) service.getManager();
+                manager.fireLastChange();
+
+                handler.postDelayed(this, 1000);
+            }
+        };
+        handler.postDelayed(runnable, 1000);
     }
 
     private void bindService() {
@@ -180,6 +196,32 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
         );
+
+        // 但是，还有一个细节需要考虑:LastChange事件的传播。
+        // 当任何播放状态或转换向LastChange添加“更改”时，这些数据将被累积。
+        // 它不会立即或自动发送到GENA订户!如何以及何时将所有累积的更改刷新到控制点由你决定。
+        // 一种常见的方法是后台线程每秒钟(甚至更频繁地)执行这个操作
+        //LastChangeAwareServiceManager manager = (LastChangeAwareServiceManager)service.getManager();
+        //manager.fireLastChange();
+
+        /*
+        ActionCallback setAVTransportURIAction =
+                new SetAVTransportURI(service, "http://10.0.0.1/file.mp3", "NO METADATA") {
+                    @Override
+                    public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                        // Something was wrong
+                    }
+                };
+
+        ActionCallback playAction =
+                new Play(service) {
+                    @Override
+                    public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                        // Something was wrong
+                    }
+                };
+        */
+
         return new LocalDevice(identity, type, details, service);
     }
 }

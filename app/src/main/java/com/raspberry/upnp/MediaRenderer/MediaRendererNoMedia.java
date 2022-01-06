@@ -33,6 +33,6 @@ public class MediaRendererNoMedia extends NoMediaPresent {
         VideoService.getEvent().onNewMedia(uri, metaData);
         //MainActivity.newMedia(uri);
 
-        return MediaRendererStopped.class;
+        return MediaRendererPlaying.class;
     }
 }

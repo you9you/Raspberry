@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Raspberry</string>
+    <string name="app_exit">再按一次退出程式</string>
+    <string name="player_exit">再按一次停止</string>
+</resources>

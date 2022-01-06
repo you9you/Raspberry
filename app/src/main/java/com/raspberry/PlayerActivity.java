@@ -3,10 +3,7 @@ package com.raspberry;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Message;
+import android.os.*;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -59,20 +56,17 @@ public class PlayerActivity extends AppCompatActivity implements VideoListener {
         videoPlayer.setVideoListener(this);
         videoPlayer.setEnableMediaCodec(false);
 
-        handler = new Handler() {
+        handler = new Handler(Looper.getMainLooper()) {
             @Override
             public void handleMessage(Message msg) {
-                switch (msg.what) {
-                    case MSG_REFRESH:
-                        if (DEV == 0) {
-                            refresh();
-                            handler.sendEmptyMessageDelayed(MSG_REFRESH, 500);
-                        }
+                if (msg.what == MSG_REFRESH) {
+                    if (DEV == 0) {
+                        refresh();
+                        handler.sendEmptyMessageDelayed(MSG_REFRESH, 500);
+                    }
 
-                        //LastChangeAwareServiceManager manager = (LastChangeAwareServiceManager) service.getManager();
-                        //manager.fireLastChange();
-
-                        break;
+                    //LastChangeAwareServiceManager manager = (LastChangeAwareServiceManager) service.getManager();
+                    //manager.fireLastChange();
                 }
             }
         };
@@ -116,7 +110,7 @@ public class PlayerActivity extends AppCompatActivity implements VideoListener {
         }
     }
 
-    private void exit(){
+    private void exit() {
         videoPlayer.stop();
         videoPlayer.release();
         handler.removeCallbacksAndMessages(null);
@@ -124,10 +118,10 @@ public class PlayerActivity extends AppCompatActivity implements VideoListener {
     }
 
     private long exitTime = 0;
-    private Handler mHandler = new Handler();
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
     private RunnableSeek runnableSeek;
 
-    int[] DEV_array = {2, 3, 5, 10, 20, 30, 60};
+    int[] DEV_array = {5, 5, 10, 20, 30, 60};
     private int INC = 0;
     private int DEC = 0;
     private long time = 0;
